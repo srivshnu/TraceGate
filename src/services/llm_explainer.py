@@ -16,10 +16,12 @@ class LLMExplainer:
             
         self._load_prompts()
         
-        # Initialize standard Flash model using the extracted System Instruction
+        # Serialize system instruction JSON object to a string for Gemini
+        system_instruction_str = json.dumps(self.prompts["audit_explainer"]["system_instruction"], indent=2)
+        
         self.model = genai.GenerativeModel(
             "gemini-1.5-flash",
-            system_instruction=self.prompts["audit_explainer"]["system_instruction"]
+            system_instruction=system_instruction_str
         )
         
     def _load_prompts(self):
@@ -29,18 +31,25 @@ class LLMExplainer:
             self.prompts = json.load(f)
             
     def generate_explanation(self, billed_cost: float, predicted_cost: float, engine_temp: float) -> str:
-        """Injects dynamic variables into the JSON template and prompts the LLM."""
-        template = self.prompts["audit_explainer"]["dynamic_template"]
+        """Populates dynamic JSON prompt values and serializes to JSON string."""
+        template_obj = self.prompts["audit_explainer"]["dynamic_template"]
         
-        # Execute normal dynamic instruction via template formatting
-        prompt = template.format(
-            billed_cost=billed_cost,
-            predicted_cost=predicted_cost,
-            engine_temp=engine_temp
-        )
+        # Inject dynamic values into structured dictionary
+        prompt_data = {
+          "function": template_obj["function"],
+          "inputs": {
+            "billed_amount_usd": round(billed_cost, 2),
+            "ml_expected_amount_usd": round(predicted_cost, 2),
+            "sensor_engine_temp_c": round(engine_temp, 2)
+          },
+          "constraints": template_obj["constraints"]
+        }
+        
+        # Convert dictionary directly to JSON string for LLM execution
+        prompt = json.dumps(prompt_data, indent=2)
         
         try:
-            logger.info("Requesting explanation from Gemini LLM...")
+            logger.info("Requesting explanation from Gemini LLM using JSON prompt...")
             response = self.model.generate_content(prompt)
             return response.text
         except Exception as e:

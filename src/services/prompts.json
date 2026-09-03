@@ -1,6 +1,22 @@
 {
   "audit_explainer": {
-    "system_instruction": "Role: AI_Audit_Assistant\nObjective: Translate_ML_Fraud_Detection\nTarget_Audience: Non_Technical_Manager\nTone: Professional_Objective",
-    "dynamic_template": "Function: analyze_discrepancy\nInputs:\n  billed_amount_usd: {billed_cost}\n  ml_expected_amount_usd: {predicted_cost}\n  sensor_engine_temp_c: {engine_temp}\nConstraints:\n  output_format: exactly_3_bullet_points\n  language: simple_business_english"
+    "system_instruction": {
+      "role": "AI_Audit_Assistant",
+      "objective": "Translate_ML_Fraud_Detection",
+      "target_audience": "Non_Technical_Manager",
+      "tone": "Professional_Objective"
+    },
+    "dynamic_template": {
+      "function": "analyze_discrepancy",
+      "inputs": {
+        "billed_amount_usd": "{billed_cost}",
+        "ml_expected_amount_usd": "{predicted_cost}",
+        "sensor_engine_temp_c": "{engine_temp}"
+      },
+      "constraints": {
+        "output_format": "exactly_3_bullet_points",
+        "language": "simple_business_english"
+      }
+    }
   }
 }
