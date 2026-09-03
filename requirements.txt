@@ -1,0 +1,7 @@
+pandas
+scikit-learn
+streamlit
+openpyxl
+faker
+google-generativeai
+python-dotenv
