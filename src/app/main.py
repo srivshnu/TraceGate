@@ -15,8 +15,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Auto-refresh every 30 seconds to pick up new simulator transactions
-st_autorefresh(interval=30_000, limit=None, key="live_feed_refresh")
+# Auto-refresh every 1 minute to pick up new simulator transactions
+st_autorefresh(interval=60_000, limit=None, key="live_feed_refresh")
 
 # ─────────────────────────────────────────────
 #  CUSTOM CSS — Professional Card / KPI Layer
@@ -93,7 +93,7 @@ with st.sidebar:
     st.markdown('<p class="brand-sub">Audit Intelligence Platform v1.0</p>', unsafe_allow_html=True)
     st.divider()
     st.markdown('<span class="status-dot dot-live"></span><span style="color:#34d399;font-size:0.82rem;">Live Monitor Active</span>', unsafe_allow_html=True)
-    st.caption("Page refreshes every 30s automatically.")
+    st.caption("Page refreshes every 60s automatically.")
     st.divider()
     st.markdown("**Filters**")
     z_threshold = st.slider("Z-Score Alert Threshold", 1.0, 5.0, 2.5, 0.1,
