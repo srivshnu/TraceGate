@@ -51,7 +51,7 @@ def generate_live_transaction():
 
 if __name__ == "__main__":
     logger.info("Starting Live Simulator Daemon...")
-    logger.info("Simulating a new transaction every 10 minutes...")
+    logger.info("Simulating a new transaction every 1 minute...")
     while True:
         generate_live_transaction()
-        time.sleep(600)  # Wait 10 minutes before next transaction
+        time.sleep(60)  # Wait 1 minute before next transaction
