@@ -53,7 +53,7 @@ class LLMExplainer:
         try:
             logger.info("Calling Gemini API for anomaly explanation...")
             model = genai.GenerativeModel(
-                "gemini-1.5-flash",
+                "gemini-3.5-flash",
                 system_instruction=system_str,
             )
             response = model.generate_content(prompt)
