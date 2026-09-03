@@ -225,20 +225,6 @@ else:
                     st.info(explanation)
 
 # ─────────────────────────────────────────────
-#  CHART — Anomalies per Dealership
-# ─────────────────────────────────────────────
-if not anomalies_df.empty:
-    st.markdown('<div class="section-label">📊 Anomaly Distribution by Dealership</div>',
-                unsafe_allow_html=True)
-    chart_data = (
-        anomalies_df.groupby("dealership_id")
-        .size()
-        .reset_index(name="Anomaly Count")
-        .sort_values("Anomaly Count", ascending=False)
-    )
-    st.bar_chart(chart_data.set_index("dealership_id"), color="#00D4FF")
-
-# ─────────────────────────────────────────────
 #  LIVE FEED TABLE
 # ─────────────────────────────────────────────
 st.markdown('<div class="section-label">📋 Live Transaction Feed</div>', unsafe_allow_html=True)
