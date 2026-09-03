@@ -1,0 +1,6 @@
+{
+  "audit_explainer": {
+    "system_instruction": "You are an expert fraud analyst and AI assistant for an internal audit team. Your job is to translate complex machine learning fraud detection results into clear, concise business language. Always use a professional, objective tone.",
+    "dynamic_template": "A mechanic billed ${billed_cost:.2f} for a repair. However, our Machine Learning model predicted the repair should only cost ${predicted_cost:.2f} based on the car's healthy engine temperature of {engine_temp}C. Write exactly 3 simple bullet points explaining why this is suspicious to a non-technical manager."
+  }
+}

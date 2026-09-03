@@ -1,4 +1,6 @@
+import json
 import google.generativeai as genai
+from pathlib import Path
 from src.config import GEMINI_API_KEY, setup_logger
 
 logger = setup_logger(__name__)
@@ -12,19 +14,30 @@ class LLMExplainer:
         else:
             genai.configure(api_key=GEMINI_API_KEY)
             
-        # Initialize standard Flash model for fast generation
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self._load_prompts()
         
+        # Initialize standard Flash model using the extracted System Instruction
+        self.model = genai.GenerativeModel(
+            "gemini-1.5-flash",
+            system_instruction=self.prompts["audit_explainer"]["system_instruction"]
+        )
+        
+    def _load_prompts(self):
+        """Loads prompt templates from the external JSON file."""
+        prompt_path = Path(__file__).parent / "prompts.json"
+        with open(prompt_path, "r") as f:
+            self.prompts = json.load(f)
+            
     def generate_explanation(self, billed_cost: float, predicted_cost: float, engine_temp: float) -> str:
-        """Prompts the LLM to explain the financial discrepancy in non-technical terms."""
+        """Injects dynamic variables into the JSON template and prompts the LLM."""
+        template = self.prompts["audit_explainer"]["dynamic_template"]
         
-        prompt = f"""
-        You are an AI assistant for an internal audit team. 
-        A mechanic billed ${billed_cost:.2f}. However, our Machine Learning model 
-        predicted the repair should only cost ${predicted_cost:.2f} based on the car's 
-        healthy engine temperature of {engine_temp}C.
-        Write exactly 3 simple bullet points explaining why this is suspicious to a non-technical manager.
-        """
+        # Execute normal dynamic instruction via template formatting
+        prompt = template.format(
+            billed_cost=billed_cost,
+            predicted_cost=predicted_cost,
+            engine_temp=engine_temp
+        )
         
         try:
             logger.info("Requesting explanation from Gemini LLM...")
