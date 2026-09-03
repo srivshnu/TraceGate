@@ -20,7 +20,17 @@ Simulator Daemon  →  SQLite DB  →  Random Forest ML  →  Streamlit Live UI
 - **ML Layer:** Random Forest Regressor trained on vehicle telemetry (engine temp, RPM variance) to predict expected repair cost
 - **Anomaly Detection:** Z-Score statistical deviation flags invoices > 2.5 standard deviations from model predictions
 - **Explainability:** Google Gemini LLM generates a plain-English 5–6 sentence audit report for each flagged transaction
-- **UI:** Streamlit dashboard with live auto-refresh, KPI cards, anomaly alerts, bar chart, and formatted feed table
+- **UI:** Streamlit dashboard with live auto-refresh, KPI cards, anomaly alerts, and a formatted feed table
+
+---
+
+## Features
+
+- [x] **Real-Time Data Feed:** Background daemon synthesizes and records live transaction data every 60 seconds.
+- [x] **Machine Learning Pipeline:** Random Forest Regressor trained on IoT telemetry to establish expected cost baselines.
+- [x] **Statistical Anomaly Detection:** Real-time Z-Score calculation flags transactions > 2.5 standard deviations from the norm.
+- [x] **Generative AI Explainability:** Deep integration with Google Gemini 3.5 to translate mathematical anomalies into plain-English auditor explanations.
+- [x] **Live Dashboard:** Dark-themed, responsive Streamlit UI with KPI tracking and 60-second auto-refresh.
 
 ---
 
