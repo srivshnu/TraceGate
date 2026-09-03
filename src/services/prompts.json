@@ -14,7 +14,8 @@
         "sensor_engine_temp_c": "{engine_temp}"
       },
       "constraints": {
-        "output_format": "exactly_3_bullet_points",
+        "output_format": "paragraph_of_5_to_6_sentences",
+        "formatting": "do_not_use_bullet_points",
         "language": "simple_business_english"
       }
     }

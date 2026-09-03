@@ -5,3 +5,4 @@ openpyxl
 faker
 google-generativeai
 python-dotenv
+streamlit-autorefresh
