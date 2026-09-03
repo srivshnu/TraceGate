@@ -7,15 +7,22 @@ __pycache__/
 .venv
 env/
 venv/
-ENV/
 
-# Data
-data/raw/*
-data/processed/*
+# Data — never commit generated data or models to git
+data/raw/
+data/processed/
+data/models/
+data/tracegate.db
+
+# Keep folder structure intact
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/models/.gitkeep
 
 # IDEs
 .idea/
 .vscode/
 *.swp
+
+# Streamlit cache
+.streamlit/secrets.toml
