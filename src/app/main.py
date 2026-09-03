@@ -107,7 +107,10 @@ with st.sidebar:
 # ─────────────────────────────────────────────
 @st.cache_resource
 def get_llm_service():
-    return LLMExplainer()
+    try:
+        return LLMExplainer()
+    except ValueError as e:
+        return None, str(e)
 
 # ─────────────────────────────────────────────
 #  DATA LOADING
@@ -119,9 +122,11 @@ def load_transactions() -> pd.DataFrame:
         return pd.DataFrame()
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query(
-        "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT 200", conn
+        "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT 20", conn
     )
     conn.close()
+    # Format timestamp to human-readable: "03 Sep 2026  11:36 PM"
+    df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.strftime("%d %b %Y  %I:%M %p")
     return df
 
 df = load_transactions()
@@ -157,7 +162,7 @@ with k1:
     st.markdown(f"""<div class="kpi-card">
         <div class="kpi-label">Total Transactions</div>
         <div class="kpi-value">{len(df)}</div>
-        <div class="kpi-sub">Last 200 records</div>
+        <div class="kpi-sub">Last 20 records</div>
     </div>""", unsafe_allow_html=True)
 with k2:
     color_class = "danger" if anomaly_count > 0 else "success"
@@ -206,13 +211,18 @@ else:
 
             if st.button("🔍  Explain This Anomaly", key=f"explain_{row['vin']}",
                          type="primary"):
-                with st.spinner("Analysing fraud context with AI..."):
-                    explanation = get_llm_service().generate_explanation(
-                        row["billed_cost"],
-                        row["ml_predicted_cost"],
-                        row["engine_temp_c"],
-                    )
-                st.info(explanation)
+                llm = get_llm_service()
+                if llm is None or isinstance(llm, tuple):
+                    err = llm[1] if isinstance(llm, tuple) else "API key not configured."
+                    st.error(f"⚠️ {err}")
+                else:
+                    with st.spinner("Analysing fraud context with AI..."):
+                        explanation = llm.generate_explanation(
+                            row["billed_cost"],
+                            row["ml_predicted_cost"],
+                            row["engine_temp_c"],
+                        )
+                    st.info(explanation)
 
 # ─────────────────────────────────────────────
 #  CHART — Anomalies per Dealership

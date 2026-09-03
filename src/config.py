@@ -3,11 +3,11 @@ from pathlib import Path
 import logging
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
 # Centralized Project Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Always resolve .env relative to project root — works regardless of cwd
+load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
 DATA_DIR = BASE_DIR / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
