@@ -83,12 +83,97 @@ st.markdown("""
         padding-bottom: 0.4rem;
     }
 
-    /* Sidebar branding */
-    .brand-title { color: #00D4FF; font-size: 1.3rem; font-weight: 800; letter-spacing: 2px; }
-    .brand-sub   { color: #475569; font-size: 0.75rem; }
-    .status-dot  { display: inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; }
-    .dot-live    { background: #34d399; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    /* Sidebar branding & cards */
+    .brand-title { 
+        color: #00D4FF; 
+        font-size: 1.35rem; 
+        font-weight: 800; 
+        letter-spacing: 2px;
+        margin: 0;
+        text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+    }
+    .brand-sub { 
+        color: #94A3B8; 
+        font-size: 0.8rem; 
+        font-weight: 500;
+        margin-top: 0.35rem;
+        letter-spacing: 0.3px;
+    }
+    .sidebar-card {
+        background: #111827;
+        border: 1px solid #1E293B;
+        border-radius: 8px;
+        padding: 0.85rem 1rem;
+        margin: 0.75rem 0;
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #34D399;
+        font-size: 0.82rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.6rem;
+    }
+    .status-dot { 
+        display: inline-block; 
+        width: 8px; 
+        height: 8px; 
+        border-radius: 50%; 
+        box-shadow: 0 0 6px #34D399;
+    }
+    .dot-live { 
+        background: #34D399; 
+        animation: pulse 2s infinite; 
+    }
+    .sidebar-label {
+        color: #64748B;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+    .threshold-content {
+        color: #E2E8F0;
+        font-size: 0.82rem;
+        line-height: 1.4;
+    }
+    .threshold-sub {
+        color: #94A3B8;
+        font-size: 0.72rem;
+        margin-top: 0.2rem;
+    }
+    .system-header {
+        color: #F1F5F9;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.5px;
+    }
+    .db-box {
+        background: #0A0F1D;
+        border: 1px solid #1E293B;
+        border-radius: 6px;
+        padding: 0.55rem 0.75rem;
+        margin-top: 0.3rem;
+    }
+    .db-title {
+        color: #64748B;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .db-filepath {
+        color: #38BDF8;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 0.73rem;
+        word-break: break-all;
+        line-height: 1.4;
+        margin-top: 0.2rem;
+    }
 
     /* Scrollable feed table */
     [data-testid="stDataFrame"] { border-radius: 8px; border: 1px solid #1e293b; }
@@ -103,20 +188,48 @@ z_threshold = Z_THRESHOLD
 #  SIDEBAR
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<p class="brand-title">🛡️ TRACEGATE</p>', unsafe_allow_html=True)
-    st.markdown('<p class="brand-sub">Audit Intelligence Platform v1.0</p>', unsafe_allow_html=True)
-    st.divider()
-    st.markdown('<span class="status-dot dot-live"></span><span style="color:#34d399;font-size:0.82rem;">Live Monitor Ready</span>', unsafe_allow_html=True)
-    if st.button("🔄 Refresh Data Now"):
+    st.markdown("""
+    <div style="padding-bottom: 0.8rem; border-bottom: 1px solid #1E293B; margin-bottom: 0.8rem;">
+        <p class="brand-title">🛡️ TRACEGATE</p>
+        <p class="brand-sub">Audit Intelligence Platform v1.0</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="sidebar-card" style="margin-bottom: 0.6rem;">
+        <div class="status-badge">
+            <span class="status-dot dot-live"></span>
+            <span>Live Monitor Ready</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("🔄 Refresh Data Now", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
-    st.divider()
-    st.caption("Anomaly threshold: Z-Score > 2.5 (fixed, per model spec)")
+
+    st.markdown("""
+    <div class="sidebar-card">
+        <div class="threshold-content">
+            Anomaly threshold: <strong style="color:#00D4FF;">Z-Score &gt; 2.5</strong><br>
+            <span class="threshold-sub">(fixed, per model spec)</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if st_autorefresh is not None:
         st_autorefresh(interval=60_000, limit=None, key="live_feed_refresh")
-    st.divider()
-    st.markdown("**System**")
-    st.caption(f"DB: `{DATA_DIR / 'tracegate.db'}`")
+
+    db_path_str = str(DATA_DIR / "tracegate.db")
+    st.markdown(f"""
+    <div class="sidebar-card">
+        <div class="system-header">System</div>
+        <div class="db-box">
+            <span class="db-title">DB:</span>
+            <div class="db-filepath">{db_path_str}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 #  SINGLETON — LLM SERVICE
