@@ -1,16 +1,26 @@
 import json
-import google.generativeai as genai
 from pathlib import Path
+
+from google import genai
+from google.genai import types
+
 from src.config import GEMINI_API_KEY, setup_logger
 
 logger = setup_logger(__name__)
 
+# Tried in order; falls through on 404 / 429 / 503 etc.
+MODEL_CHAIN = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+
 
 class LLMExplainer:
-    """Service abstraction for integrating with Google Gemini LLM."""
+    """Service abstraction for integrating with Google Gemini (google-genai SDK)."""
 
     def __init__(self):
         self._validate_key()
+        self.client = genai.Client(
+            api_key=GEMINI_API_KEY,
+            http_options=types.HttpOptions(timeout=20_000),  # ms, per request
+        )
         self.prompts = self._load_prompts()
 
     def _validate_key(self):
@@ -19,9 +29,7 @@ class LLMExplainer:
                 "GEMINI_API_KEY is missing or still set to the placeholder. "
                 "Update the .env file in the project root with your actual API key."
             )
-        # Configure the SDK with the validated key on every instantiation
-        genai.configure(api_key=GEMINI_API_KEY)
-        logger.info("Gemini API key loaded and configured successfully.")
+        logger.info("Gemini API key loaded successfully.")
 
     def _load_prompts(self) -> dict:
         """Loads the structured JSON prompt schema."""
@@ -47,18 +55,20 @@ class LLMExplainer:
             },
             "constraints": dynamic_obj["constraints"],
         }
-
         prompt = json.dumps(prompt_data, indent=2)
 
-        try:
-            logger.info("Calling Gemini API for anomaly explanation...")
-            model = genai.GenerativeModel(
-                "gemini-3.5-flash",
-                system_instruction=system_str,
-            )
-            response = model.generate_content(prompt)
-            logger.info("Gemini explanation received successfully.")
-            return response.text
-        except Exception as e:
-            logger.error(f"Gemini API call failed: {e}")
-            return f"⚠️ AI explanation unavailable: {e}"
+        last_err = None
+        for model_name in MODEL_CHAIN:
+            try:
+                logger.info(f"Calling Gemini ({model_name}) for anomaly explanation...")
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(system_instruction=system_str),
+                )
+                logger.info("Gemini explanation received successfully.")
+                return response.text
+            except Exception as e:
+                last_err = e
+                logger.error(f"Gemini call failed on {model_name}: {e}")
+        return f"⚠️ AI explanation unavailable: {last_err}"
