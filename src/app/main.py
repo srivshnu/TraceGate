@@ -1,7 +1,19 @@
+import sys
+import asyncio
+if sys.platform == "win32":
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    except Exception:
+        pass
+
 import streamlit as st
 import pandas as pd
 import sqlite3
-from streamlit_autorefresh import st_autorefresh
+try:
+    from streamlit_autorefresh import st_autorefresh
+except ImportError:
+    st_autorefresh = None
+
 from src.config import DATA_DIR
 from src.services.llm_explainer import LLMExplainer
 
@@ -15,8 +27,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Auto-refresh every 1 minute to pick up new simulator transactions
-st_autorefresh(interval=60_000, limit=None, key="live_feed_refresh")
+# Page configuration complete
 
 # ─────────────────────────────────────────────
 #  CUSTOM CSS — Professional Card / KPI Layer
@@ -85,6 +96,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+Z_THRESHOLD = 2.5
+z_threshold = Z_THRESHOLD
+
 # ─────────────────────────────────────────────
 #  SIDEBAR
 # ─────────────────────────────────────────────
@@ -92,12 +106,14 @@ with st.sidebar:
     st.markdown('<p class="brand-title">🛡️ TRACEGATE</p>', unsafe_allow_html=True)
     st.markdown('<p class="brand-sub">Audit Intelligence Platform v1.0</p>', unsafe_allow_html=True)
     st.divider()
-    st.markdown('<span class="status-dot dot-live"></span><span style="color:#34d399;font-size:0.82rem;">Live Monitor Active</span>', unsafe_allow_html=True)
-    st.caption("Page refreshes every 60s automatically.")
+    st.markdown('<span class="status-dot dot-live"></span><span style="color:#34d399;font-size:0.82rem;">Live Monitor Ready</span>', unsafe_allow_html=True)
+    if st.button("🔄 Refresh Data Now"):
+        st.cache_data.clear()
+        st.rerun()
     st.divider()
-    st.markdown("**Filters**")
-    z_threshold = st.slider("Z-Score Alert Threshold", 1.0, 5.0, 2.5, 0.1,
-                             help="Transactions with a Z-Score above this value are flagged as anomalies.")
+    st.caption("Anomaly threshold: Z-Score > 2.5 (fixed, per model spec)")
+    if st_autorefresh is not None:
+        st_autorefresh(interval=60_000, limit=None, key="live_feed_refresh")
     st.divider()
     st.markdown("**System**")
     st.caption(f"DB: `{DATA_DIR / 'tracegate.db'}`")
@@ -122,7 +138,7 @@ def load_transactions() -> pd.DataFrame:
         return pd.DataFrame()
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query(
-        "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT 20", conn
+        "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT 200", conn
     )
     conn.close()
     # Format timestamp to human-readable: "03 Sep 2026  11:36 PM"
@@ -162,7 +178,7 @@ with k1:
     st.markdown(f"""<div class="kpi-card">
         <div class="kpi-label">Total Transactions</div>
         <div class="kpi-value">{len(df)}</div>
-        <div class="kpi-sub">Last 20 records</div>
+        <div class="kpi-sub">Active window (200 records)</div>
     </div>""", unsafe_allow_html=True)
 with k2:
     color_class = "danger" if anomaly_count > 0 else "success"
@@ -193,7 +209,7 @@ st.markdown('<div class="section-label">⚠️ Anomaly Alerts</div>', unsafe_all
 if anomalies_df.empty:
     st.success("✅  All recent transactions are within normal parameters. Monitoring live feed...")
 else:
-    for _, row in anomalies_df.head(5).iterrows():
+    for _, row in anomalies_df.sort_values("z_score", ascending=False).head(5).iterrows():
         overbill = row["billed_cost"] - row["ml_predicted_cost"]
         overbill_pct = (overbill / row["ml_predicted_cost"]) * 100
 
@@ -241,7 +257,7 @@ feed_df["Engine Temp (°C)"] = feed_df["Engine Temp (°C)"].map("{:.1f}°C".form
 
 st.dataframe(
     feed_df,
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
     column_config={
         "Status": st.column_config.TextColumn("Status"),
